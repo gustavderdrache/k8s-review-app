@@ -1,0 +1,13 @@
+{
+  "devDependencies": {
+    "@types/yargs": "13.0.0",
+    "ts-node": "8.3.0",
+    "typescript": "3.5.3"
+  },
+  "dependencies": {
+    "@kubernetes/client-node": "0.10.2",
+    "execa": "2.0.3",
+    "temp-write": "4.0.0",
+    "yargs": "13.3.0"
+  }
+}
