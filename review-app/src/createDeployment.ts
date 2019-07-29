@@ -24,8 +24,8 @@ async function createDeployment(config: KubeConfig, metadata: Metadata) {
           containers: [
             {
               name: 'app',
-              image: `${metadata.repo}:${metadata.tag}`,
-              imagePullPolicy: 'Never',
+              image: `localhost:5000/${metadata.repo}:${metadata.tag}`,
+              imagePullPolicy: 'Always',
               ports: [
                 {
                   containerPort: 80,
