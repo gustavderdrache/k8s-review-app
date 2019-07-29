@@ -1,25 +1,17 @@
-import { KubeConfig, CoreV1Api } from '@kubernetes/client-node';
+import { V1Namespace } from '@kubernetes/client-node';
 
-async function hasReviewNamespace(config: KubeConfig): Promise<boolean> {
-  const client = config.makeApiClient(CoreV1Api);
+import { apply } from './kubectl';
 
-  const response = await client.listNamespace();
-  return response.body.items.some(
-    ({ metadata }) => metadata && metadata.name === 'review',
-  );
-}
-
-async function createReviewNamespace(config: KubeConfig) {
-  if (await hasReviewNamespace(config)) {
-    return;
-  }
-
-  const client = config.makeApiClient(CoreV1Api);
-  await client.createNamespace({
+async function createReviewNamespace() {
+  const namespace: V1Namespace = {
+    apiVersion: 'v1',
+    kind: 'Namespace',
     metadata: {
       name: 'review',
     },
-  });
+  };
+
+  await apply(namespace);
 }
 
 export default createReviewNamespace;

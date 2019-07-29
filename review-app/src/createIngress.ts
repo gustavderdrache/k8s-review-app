@@ -1,26 +1,22 @@
-import { KubeConfig, ExtensionsV1beta1Api } from '@kubernetes/client-node';
+import { V1beta1Ingress } from '@kubernetes/client-node';
 
-import { Metadata } from './metadata';
+import Project from './Project';
+import { apply } from './kubectl';
 
-async function createIngress(config: KubeConfig, metadata: Metadata) {
-  const client = config.makeApiClient(ExtensionsV1beta1Api);
-
-  await client.createNamespacedIngress('review', {
-    metadata: {
-      name: metadata.app,
-      labels: {
-        ...metadata,
-      },
-    },
+async function createIngress(project: Project) {
+  const ingress: V1beta1Ingress = {
+    apiVersion: 'networking.k8s.io/v1beta1',
+    kind: 'Ingress',
+    metadata: project.metadata(),
     spec: {
       rules: [
         {
-          host: `${metadata.branch}.${metadata.repo}.review.app`,
+          host: `${project.safeBranch}.${project.safeRepository}.review.app`,
           http: {
             paths: [
               {
                 backend: {
-                  serviceName: metadata.app,
+                  serviceName: project.name,
                   servicePort: 80,
                 },
               },
@@ -29,7 +25,9 @@ async function createIngress(config: KubeConfig, metadata: Metadata) {
         },
       ],
     },
-  });
+  };
+
+  await apply(ingress);
 }
 
 export default createIngress;

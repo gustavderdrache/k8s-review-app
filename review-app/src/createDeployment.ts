@@ -1,30 +1,27 @@
-import { KubeConfig, AppsV1Api } from '@kubernetes/client-node';
-import { Metadata } from './metadata';
+import { V1Deployment } from '@kubernetes/client-node';
 
-async function createDeployment(config: KubeConfig, metadata: Metadata) {
-  const appsClient = config.makeApiClient(AppsV1Api);
+import { apply } from './kubectl';
+import Project from './Project';
 
-  await appsClient.createNamespacedDeployment('review', {
-    metadata: {
-      name: metadata.app,
-      labels: { ...metadata },
-    },
+async function createDeployment(project: Project) {
+  const deployment: V1Deployment = {
+    apiVersion: 'apps/v1',
+    kind: 'Deployment',
+    metadata: project.metadata(),
     spec: {
       replicas: 2,
       selector: {
-        matchLabels: {
-          app: metadata.app,
-        },
+        matchLabels: project.selector(),
       },
       template: {
         metadata: {
-          labels: { ...metadata },
+          labels: project.labels(),
         },
         spec: {
           containers: [
             {
               name: 'app',
-              image: `localhost:5000/${metadata.repo}:${metadata.tag}`,
+              image: `localhost:5000/${project.safeRepository}:${project.branch}`,
               imagePullPolicy: 'Always',
               ports: [
                 {
@@ -37,7 +34,9 @@ async function createDeployment(config: KubeConfig, metadata: Metadata) {
         },
       },
     },
-  });
+  };
+
+  await apply(deployment);
 }
 
 export default createDeployment;

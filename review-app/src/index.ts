@@ -1,27 +1,31 @@
-import { KubeConfig } from '@kubernetes/client-node';
+import crypto from 'crypto';
+import { promisify } from 'util';
 import yargs from 'yargs';
 
 import createDeployment from './createDeployment';
 import createReviewNamespace from './createReviewNamespace';
 import createService from './createService';
 import createIngress from './createIngress';
-import { createMetadata } from './metadata';
+import Project from './Project';
 
-const argv = yargs.command('$0 <repo> <branch>', '...').help().argv;
+const argv = yargs.command('$0 <repository> <branch>', '...').help().argv;
 
-const repo = String(argv.repo);
+const repository = String(argv.repository);
 const branch = String(argv.branch);
 
+const randomBytes = promisify(crypto.randomBytes);
+
 async function main() {
-  const config = new KubeConfig();
-  config.loadFromDefault();
+  const commitBytes = await randomBytes(8);
+  const commit = commitBytes.toString('hex').toLowerCase();
 
-  const metadata = createMetadata(repo, branch);
 
-  await createReviewNamespace(config);
-  await createDeployment(config, metadata);
-  await createService(config, metadata);
-  await createIngress(config, metadata);
+  const project = new Project(repository, branch, commit);
+
+  await createReviewNamespace();
+  await createDeployment(project);
+  await createService(project);
+  await createIngress(project);
 }
 
 main().catch(error => {

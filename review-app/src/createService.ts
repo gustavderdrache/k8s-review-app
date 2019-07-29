@@ -1,20 +1,16 @@
-import { KubeConfig, CoreV1Api } from '@kubernetes/client-node';
+import { V1Service } from '@kubernetes/client-node';
 
-import { Metadata } from './metadata';
+import Project from './Project';
+import { apply } from './kubectl';
 
-async function createService(config: KubeConfig, metadata: Metadata) {
-  const coreClient = config.makeApiClient(CoreV1Api);
-
-  await coreClient.createNamespacedService('review', {
-    metadata: {
-      name: metadata.app,
-      labels: { ...metadata },
-    },
+async function createService(project: Project) {
+  const service: V1Service = {
+    apiVersion: 'v1',
+    kind: 'Service',
+    metadata: project.metadata(),
     spec: {
       clusterIP: 'None',
-      selector: {
-        app: metadata.app,
-      },
+      selector: project.selector(),
       ports: [
         {
           name: 'http',
@@ -22,7 +18,9 @@ async function createService(config: KubeConfig, metadata: Metadata) {
         },
       ],
     },
-  });
+  };
+
+  await apply(service);
 }
 
 export default createService;
